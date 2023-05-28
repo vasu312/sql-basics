@@ -1,4 +1,6 @@
--- BASIC SQL OPERATIONS 
+######################################################
+################## SQL BASICS  #######################			CHAPTER - 1
+######################################################
 
 /*	CREATE AND USE DATABASE
 
@@ -33,7 +35,8 @@
     4)	alter table students add column city varchar(5);   -- add new column to the table
     
     5)	alter table students drop column city;   -- remove column from the table
-
+	
+    6)	Delete from students;		----> Remove all records from Students table
 */
 
 /*		RECORD MANIPULATION
@@ -470,3 +473,360 @@ INSERT INTO employee1 VALUES(15,'Ranjani','ENGINEER',2100000,NULL);
         4)	drop view emp_br;
 
  */
+ 
+###########################################################################
+################### STORED PROCEDURES AND FUNCTIONS #######################			CHAPTER - 2
+###########################################################################
+
+
+/*	Stored Procedures
+	
+    --->	A stored procedure is a prepared SQL code that you can save, so the code can be reused over
+			and over again.
+            
+	-->		If you have an SQLquery that you used write over and over again , save it as stored procedure,
+			and then just call it to execute it.alter
+            
+	-->		You can also pass parameters to a stored procedure, so that stored procedure can can act based 
+			on the parameter values that is passed.
+            
+            
+	1)	delimiter $$	-----> SET '$$' as end of the Query	to avoid ';' conflict in stored procedure query.
+		create procedure get_all_tables()							---> Create Stored procedure.
+		begin
+			select * from employee1;
+			select * from branch;
+			select * from customer;
+			select * from client;
+		end$$
+		delimiter ;  ----> SET ';' as end of the Query as usual one.
+        
+	2)	call get_all_tables;							----->	Call Stored Procedure
+    
+    3)	drop procedure get_all_tables;					----->	Delete Stored Procedure
+		drop procedure if exists get_all_tables;
+    
+    4)	show procedure status;							---->	Stored Procedure Status
+    
+*/
+
+/*		VARIABLES 
+
+	1)	delimiter $$
+		CREATE PROCEDURE get_employee_count()		
+		BEGIN
+			DECLARE emp_count INT DEFAULT 0;	-->	Declare a varible emp_count and set its data type and default value
+			SELECT COUNT(salary) INTO emp_count	FROM employee1; --> save the output into emp_count variable
+			SELECT emp_count AS 'Employee Count';	
+		END $$
+		delimiter ;
+
+*/
+
+/*		PARAMETER 
+		-> Types =  1)	In - for Input Variable , 
+				    2)	Out - for Output Variable, 
+                    3)	InOut - for Input and Output Variable
+	
+    1)	delimiter $$											### IN
+		create procedure get_emp_count_with_param(
+			in param_input varchar(20)							-->	Parameter using IN
+		)
+		BEGIN
+			declare total int default 0;
+			select count(salary) into total from employee1 where woking_area = param_input;
+			select total ;
+		END $$
+		delimiter ;
+		call get_emp_count_with_param('ADMIN');					-->	Passing Parameter
+
+	2)	delimiter $$										### OUT
+		create procedure get_count(
+			in input varchar(10) ,				--->	Receiving input Parameter	
+			out output int 						--->	Used for exporting output like return in function		
+		)
+		BEGIN
+			select count(salary) 
+            into output from employee1 		---->	Save result to output variable
+            where job = input;				---->	Use Input variable for where condition
+		END $$
+		delimiter ;
+
+		call get_count("ADMIN",@output);	---->	call the procedure with two parameter one for input and another 
+													on for [OUTPUT] return variable (SESSION VARIABLE)
+		select @output;						----> 	display returned output variable(SESSION VARIABLE)							
+
+	3)	delimiter $$											#### 	INOUT
+		create procedure Increment_program(
+			INOUT variable int,							---> Param 1 (Session Varibale)
+			IN param int								---> Param 2
+		)
+		BEGIN
+			SET variable = variable + param ;
+		END $$
+		delimiter ;
+
+		set @count = 5;
+		call Increment_program(@count, 5);
+		select @count;
+
+*/
+
+/*	IF ELSE CONDITION
+	
+		delimiter $$
+		create procedure if_else_program( IN id int )
+		BEGIN
+			IF id =1 THEN select "CSK";
+			ELSEIF id =2 THEN select "RCB";
+			ELSEIF id =3 THEN select "MI";
+			ELSE select "GT";
+			END IF;
+		END $$
+		delimiter ;
+
+		call if_else_program(3);
+
+*/
+
+/*	SWITCH CASE
+	
+		delimiter $$
+		create procedure switch_program( IN id int )
+		BEGIN
+			CASE id
+				WHEN 1 THEN select "India";
+				WHEN 2 THEN select "Australia";
+				WHEN 3 THEN select "Newzland";
+				ELSE select "Input is Wrong";
+			END CASE;
+		END $$
+		delimiter ;
+
+		call switch_program(4);
+
+*/
+
+/*		LOOPS
+
+	delimiter $$
+	create procedure LoopDemo( IN i int,IN j int )
+	BEGIN
+		declare str varchar(30) default "";
+		my_loop:LOOP							--->	my_loop is a LABEL . it is like name of the loop.
+			IF i>j THEN LEAVE my_loop;      	--->	Leave is similar to break 
+			END IF;
+			SET str = concat(str,i," ");
+			SET i= i + 1;
+		END LOOP;
+		select str;
+	END $$
+	delimiter ;
+
+	call LoopDemo(90,99);
+
+*/
+
+/*		WHILE LOOPS
+
+	delimiter $$
+	create procedure WhileLoopDemo( IN i int,IN j int )
+	BEGIN
+		declare str varchar(30) default "";
+		WHILE i<=j DO										---> Similar to while loop in c
+			SET str = concat(str,i," ");
+			SET i= i + 1;
+		END WHILE;
+		select str;
+	END $$
+	delimiter ;
+
+	call WhileLoopDemo(6,12);
+
+*/
+
+/*		REPEAT KEYWORK
+
+		delimiter $$
+		create procedure WhileLoopDemo( IN i int,IN j int )
+		BEGIN
+			declare str varchar(30) default "";
+			REPEAT
+				SET str = concat(str,i," ");
+				SET i= i + 1;
+				UNTIL i>j								----> It Repeat the process until the condition pass
+			END REPEAT;
+			select str;
+		END $$
+		delimiter ;
+
+		call WhileLoopDemo(1,3);
+
+*/
+
+/*		FUNCTIONS
+
+	1)	delimiter $$
+		create function getAddress(id int)				--> Function Name and parameter			
+		returns varchar(300)							--> Function Return Type
+		deterministic									--> It set the function output in cache for same output  
+		BEGIN												 Two Options [	deterministic (Cache), not deterministic]					
+			declare str varchar(100) default "";    
+			select concat(branch_name, " ",address) 
+			into str from branch 
+			where branch_id = id;
+			return str;									---->	Returns the value of str
+		END $$
+		delimiter ;
+        
+		select getAddress(branch_id) from branch;
+
+	2)	drop function getAddress;					---> Delete Function
+		drop function if exists getAddress;
+
+	3)	show function status;
+
+*/
+
+/*	DIFFERENT BETWEEN FUNCTIONS and STORED PROCEDURES
+	------FUNCTIONS------                            -------STORED PROCEDURES---------
+            
+	* 	We can call functions inside query			* Call Seperately using call
+    *	used when add small functionality    		* used when want to store more complex queries		
+    
+*/
+
+/*		ERROR HANDLING
+
+	HANDLER ERROR CATEGORY TYPES --> SQLWARNING , SQLEXCEPTION , NOT FOUNT , SQLSTATE , ERROR CODE (3003)
+
+	1)	delimiter $$
+		create procedure ErrorHandleDemo(
+			id int , name varchar(30), address varchar(30)
+		)
+		BEGIN
+			DECLARE CONTINUE HANDLER FOR 1062		--->	This continue handle the error and continue with next line
+				BEGIN
+					Select concat("Duplicate Data for ID : ",id," So Try Different ID")as 'Error Message';
+				END;
+			insert into branch 
+			values(id,name,address);
+			select * from branch;
+		END $$
+		delimiter ;
+
+		call ErrorHandleDemo(5,"Chennai","Dubai , Dubai Main Road");
+
+	2)	delimiter $$
+		create procedure ErrorHandleDemo(
+			id int , name varchar(30), address varchar(30)
+		)
+		BEGIN
+			DECLARE EXIT HANDLER FOR 1062	--->	This continue handle the error and exit the procedure
+				BEGIN
+					Select concat("Duplicate Data for ID : ",id," So Try Different ID")as 'Error Message';
+				END;
+			insert into branch 
+			values(id,name,address);
+			select * from branch;
+		END $$
+		delimiter ;
+
+		call ErrorHandleDemo(5,"Chennai","Dubai , Dubai Main Road");
+
+	3)	delimiter $$
+		create procedure ErrorHandleDemo(
+			id int , name varchar(30), address varchar(30)
+		)
+		BEGIN
+			DECLARE InsertErrorCode CONDITION for 1062;			-- --> Named Condition
+			DECLARE CONTINUE HANDLER FOR InsertErrorCode
+				BEGIN
+					Select concat("Duplicate Data for ID : ",id," So Try Different ID")as 'Error Message';
+				END;
+			insert into branch 
+			values(id,name,address);
+			select * from branch;
+		END $$
+		delimiter ;
+
+		call ErrorHandleDemo(5,"Chennai","Dubai , Dubai Main Road");
+
+/
+
+/*	ERROR HANDLE USING SIGNAL AND RESIGNAL 
+
+	--> Signal for User Defined Error Raise (USE ANYWHERE)
+    --> Signal for User Defined for Existing Error
+
+	1)	delimiter $$
+		create procedure ErrorHandleDemo(	id int , name varchar(30), address varchar(30)	)
+		BEGIN
+			DECLARE CONTINUE HANDLER FOR 1062
+				BEGIN
+					Select concat("Duplicate Data for ID : ",id," So Try Different ID")as 'Error Message';
+				END;
+			IF char_length(name) < 4 then 			---> USER DEFINED EXCEPTION ERROR HANDLER
+				signal sqlstate '45000'
+				set message_text = " Error Length";
+			END IF;
+			insert into branch 
+			values(id,name,address);
+			select * from branch;
+		END $$
+		delimiter ;
+        
+        call ErrorHandleDemo(7,"Ci","Dubai , Dubai Main Road");   ---> Name is short so it will throw error
+
+	2)	delimiter $$
+		create procedure ErrorHandleDemo(	id int , name varchar(30), address varchar(30)	)
+		BEGIN
+			DECLARE CONTINUE HANDLER FOR 1062
+				resignal set message_text = "Duplicate Key Found Try New One";
+			insert into branch 
+			values(id,name,address);
+			select * from branch;
+		END $$
+		delimiter ;
+        
+        call ErrorHandleDemo(1,"Ci","Dubai , Dubai Main Road");   ---> Duplicate Id 
+
+*/
+
+/*			CURSORS ---> Use to access each records in result set
+	
+    ### Back Table using Cursors
+	
+			select * from client;
+			select * from backup_client;
+
+			# CREATE NEW TABLE WITH SAME TABLE SCHEMA
+
+			create table backup_client(
+			 backup_cliet_id int primary key,
+			 backup_client_name varchar (30),
+			 backup_client_address varchar (30)
+			);
+
+			delimiter $$
+			create procedure backup_table()
+			BEGIN
+				declare id int;
+				declare name ,addr varchar(30);
+				declare done int default 0;
+				declare cur cursor for select * from client;
+				declare exit handler for not found set done =1;
+				open cur;
+				label : loop
+					if done = 1 then leave label;
+					end if;
+					fetch cur into id,name,addr;
+					insert into backup_client values(id,name,addr);
+				end loop;
+				close cur;
+			END $$
+			delimiter ;
+
+			call backup_table();
+
+*/
